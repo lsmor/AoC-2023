@@ -4,27 +4,28 @@ import System.Environment (getArgs)
 import Data.ByteString.Char8 qualified as B
 import Data.Char qualified as Char 
 import Data.Trie qualified as Trie
-{- Types for your input and your solution
 
-- Input    should as the type of your input parameter. AOC, typically uses arrays, matrices or complex data structures. 
-- Solution should be the type of your solution. Typically is an Int, but It can be other things, like a list of numbers
-         or a list of characters
--}
-type Input    = [(Int, Int)]  -- default to Bytestring, but very likely you'll need to change it
-type Solution = Int
+type Input    = [(Int, Int)]  -- We should parse our input string into a list of pairs of ints. One pair for each line
+type Solution = Int           -- The requested solution is an Int
 
 parseLine :: B.ByteString -> (Int, Int)
 parseLine bs = (getNumber bs, getNumber (B.reverse bs))
   where getNumber = maybe 0 Char.digitToInt . B.find Char.isDigit
+        -- | Find the first char which is a digit. B.find returns Optional value (impossible in AoC input)
+        -- If Nothing, we just return 0, else we transform the Character into to the Int it represent
 
 parseWithTrie :: B.ByteString -> (Int, Int)
 parseWithTrie bs = (go trie bs, go trie_rev $ B.reverse bs)
   where 
+    -- We are lazy and use a Trie data structure. You can just pattern a huge number of things
+    -- Step1: "stwo1hey"  << we try to match with the Trie
+    -- Step2: "two1hey"   << we drop the first "s" and match the and match again against the trie. 
+    -- Step : Just 2      << The string "two1hey" matches 2 in the trie
     go tr s = 
       case tr `Trie.match` s of
-                Nothing |  B.null s  -> 0
-                Nothing              -> go tr (B.drop 1 s)
-                Just (_, i, _)       -> i
+          Nothing |  B.null s  -> 0
+          Nothing              -> go tr (B.drop 1 s) 
+          Just (_, i, _)       -> i
 
 trie :: Trie.Trie Int
 trie = Trie.fromList [("one", 1), ("two", 2), ("three", 3), ("four",4), ("five", 5), ("six", 6), ("seven", 7), ("eight", 8), ("nine", 9), ("1", 1), ("2", 2), ("3", 3), ("4",4), ("5", 5), ("6", 6), ("7", 7), ("8", 8), ("9", 9)]
@@ -33,9 +34,7 @@ trie_rev :: Trie.Trie Int
 trie_rev = Trie.fromList . fmap (\(k, v) -> (B.reverse k , v)) . Trie.toList $ trie
 
 
--- | parser transforms a raw bytestring (from your ./input/day-X.input) to your Input type. 
---   this is intended to use attoparsec for such a transformation. You can use Prelude's 
---   String if it fit better for the problem
+-- | parsers take a raw bytestring, break it into lines, and map the line parser for each line
 parser :: B.ByteString -> Input
 parser = fmap parseLine . B.lines
 

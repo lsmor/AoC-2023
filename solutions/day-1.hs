@@ -19,13 +19,13 @@ parseWithTrie bs = (go trie bs, go trie_rev $ B.reverse bs)
   where 
     -- We are lazy and use a Trie data structure. You can just pattern a huge number of things
     -- Step1: "stwo1hey"  << we try to match with the Trie
-    -- Step2: "two1hey"   << we drop the first "s" and match the and match again against the trie. 
-    -- Step : Just 2      << The string "two1hey" matches 2 in the trie
+    -- Step2: "two1hey"   << we drop the first "s" and match again against the trie. (recursive step)
+    -- Step : Just 2      << The string "two1hey" matches 2 in the trie (stop recursion on match)
     go tr s = 
       case tr `Trie.match` s of
-          Nothing |  B.null s  -> 0
-          Nothing              -> go tr (B.drop 1 s) 
-          Just (_, i, _)       -> i
+          Nothing |  B.null s  -> 0                  -- Pathological case of not finding a number in the string (impossible in AoC input)
+          Nothing              -> go tr (B.drop 1 s) -- recursive step
+          Just (_, i, _)       -> i                  -- stop recursion and return the match
 
 trie :: Trie.Trie Int
 trie = Trie.fromList [("one", 1), ("two", 2), ("three", 3), ("four",4), ("five", 5), ("six", 6), ("seven", 7), ("eight", 8), ("nine", 9), ("1", 1), ("2", 2), ("3", 3), ("4",4), ("5", 5), ("6", 6), ("7", 7), ("8", 8), ("9", 9)]

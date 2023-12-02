@@ -30,12 +30,8 @@ parserLine = (,) <$> parseGameId <*> parseMaps
               <|> Atto.string "blue" $> Blue
 
 -- | parser 
-parser :: B.ByteString -> Input
-parser input =
-    case f input of 
-      ([], x) -> x            -- normal case
-      (err:_, _) -> error err -- If I fail parsing, throw runtime error. You should never do this...
-  where f = partitionEithers . fmap (Atto.parseOnly parserLine) . B.lines
+parser :: Atto.Parser Input
+parser = parserLine `Atto.sepBy` Atto.endOfLine
 
 -- | The function which calculates the solution for part one
 solve1 :: Input -> Solution
@@ -55,7 +51,11 @@ solve2 = sum . fmap (power . foldl' folding neutral . snd)
 main :: IO ()
 main = do
   [part, filepath] <- getArgs
-  input <- parser <$> B.readFile filepath
+  bs <- B.readFile filepath
+  let input = 
+        case Atto.parseOnly parser bs of
+          Right i  -> i
+          Left err -> error err
   if read @Int part == 1
     then do
       putStrLn "solution to problem 1 is:"
